@@ -1,0 +1,20 @@
+{
+  "name": "syncdom",
+  "version": "0.0.1",
+  "description": "simple dom sync.",
+  "author": "nwtks",
+  "license": "MIT",
+  "main": "src/syncdom.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nwtks/syncdom"
+  },
+  "devDependencies": {
+    "rollup": "^0.66.0",
+    "rollup-plugin-buble": "^0.19.0",
+    "rollup-plugin-uglify": "^6.0.0"
+  },
+  "scripts": {
+    "build": "rollup -c"
+  }
+}
