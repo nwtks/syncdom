@@ -13,7 +13,7 @@ export default [
   {
     input: 'src/syncdom.js',
     output: {
-      name: 'syncDom',
+      name: 'syncdom',
       file: 'dist/syncdom-umd.js',
       format: 'umd'
     },
