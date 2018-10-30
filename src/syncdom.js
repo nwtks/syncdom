@@ -27,7 +27,7 @@ function syncDom(oldNode, newNode) {
 }
 
 function syncChildren(oldParent, newParent) {
-  const keyedNodes = {}
+  const keyedNodes = Object.create(null)
   let oldNext = oldParent.firstChild
   while (oldNext) {
     const oldNode = oldNext

@@ -29,7 +29,7 @@ function syncDom(oldNode, newNode) {
 }
 
 function syncChildren(oldParent, newParent) {
-  var keyedNodes = {};
+  var keyedNodes = Object.create(null);
   var oldNext = oldParent.firstChild;
   while (oldNext) {
     var oldNode = oldNext;
