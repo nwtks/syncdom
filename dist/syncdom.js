@@ -12,11 +12,13 @@ function syncDom(oldNode, newNode) {
       if (oldNode.nodeName === newNode.nodeName) {
         syncAttrs(oldNode, newNode);
       } else {
-        var newPrev = newNode.cloneNode();
-        while (oldNode.firstChild) {
-          newPrev.appendChild(oldNode.firstChild);
+        while (newNode.lastChild) {
+          newNode.removeChild(newNode.lastChild);
         }
-        oldNode.parentNode.replaceChild(newPrev, oldNode);
+        while (oldNode.firstChild) {
+          newNode.appendChild(oldNode.firstChild);
+        }
+        oldNode.parentNode.replaceChild(newNode, oldNode);
       }
     } else {
       if (oldNode.nodeValue !== newNode.nodeValue) {
