@@ -29,18 +29,7 @@ function syncDom(oldNode, newNode) {
 }
 
 function syncChildren(oldParent, newParent) {
-  const keyedNodes = Object.create(null)
-  let oldNext = oldParent.firstChild
-  while (oldNext) {
-    const oldNode = oldNext
-    oldNext = oldNext.nextSibling
-    const key = getKey(oldNode)
-    if (key) {
-      keyedNodes[key] = oldNode
-    }
-  }
-
-  oldNext = oldParent.firstChild
+  const newKeys = []
   let newNext = newParent.firstChild
   let newCount = 0
   while (newNext) {
@@ -48,30 +37,65 @@ function syncChildren(oldParent, newParent) {
     const newNode = newNext
     newNext = newNext.nextSibling
     const key = getKey(newNode)
-    const keyedOld = key ? keyedNodes[key] : null
-    if (keyedOld) {
-      delete keyedNodes[key]
-      if (keyedOld === oldNext) {
+    if (key) {
+      newKeys.push(key)
+    }
+  }
+
+  const oldKeyedNodes = Object.create(null)
+  let oldNext = oldParent.firstChild
+  while (oldNext) {
+    const oldNode = oldNext
+    oldNext = oldNext.nextSibling
+    const key = getKey(oldNode)
+    if (key) {
+      if (newKeys.indexOf(key) >= 0) {
+        oldKeyedNodes[key] = oldNode
+      } else {
+        oldParent.removeChild(oldNode)
+      }
+    }
+  }
+
+  oldNext = oldParent.firstChild
+  newNext = newParent.firstChild
+  while (newNext) {
+    const newNode = newNext
+    newNext = newNext.nextSibling
+    const key = getKey(newNode)
+    const oldKeyed = key ? oldKeyedNodes[key] : null
+    if (oldKeyed) {
+      delete oldKeyedNodes[key]
+      if (oldKeyed === oldNext) {
         oldNext = oldNext.nextSibling
       } else {
-        oldParent.insertBefore(keyedOld, oldNext)
+        oldParent.insertBefore(oldKeyed, oldNext)
       }
-      syncDom(keyedOld, newNode)
+      syncDom(oldKeyed, newNode)
     } else if (oldNext) {
-      const oldNode = oldNext
-      oldNext = oldNext.nextSibling
-      if (containsValue(keyedNodes, oldNode)) {
-        oldParent.insertBefore(newNode, oldNode)
+      if (key) {
+        oldParent.insertBefore(newNode, oldNext)
       } else {
-        syncDom(oldNode, newNode)
+        while (true) {
+          if (!oldNext) {
+            oldParent.appendChild(newNode)
+            break
+          }
+          const oldNode = oldNext
+          oldNext = oldNext.nextSibling
+          if (!containsValue(oldKeyedNodes, oldNode)) {
+            syncDom(oldNode, newNode)
+            break
+          }
+        }
       }
     } else {
       oldParent.appendChild(newNode)
     }
   }
 
-  for (const key in keyedNodes) {
-    oldParent.removeChild(keyedNodes[key])
+  for (const key in oldKeyedNodes) {
+    oldParent.removeChild(oldKeyedNodes[key])
   }
 
   let overCount = oldParent.childNodes.length - newCount

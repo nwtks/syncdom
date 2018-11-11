@@ -31,49 +31,73 @@ function syncDom(oldNode, newNode) {
 }
 
 function syncChildren(oldParent, newParent) {
-  var keyedNodes = Object.create(null);
-  var oldNext = oldParent.firstChild;
-  while (oldNext) {
-    var oldNode = oldNext;
-    oldNext = oldNext.nextSibling;
-    var key = getKey(oldNode);
-    if (key) {
-      keyedNodes[key] = oldNode;
-    }
-  }
-
-  oldNext = oldParent.firstChild;
+  var newKeys = [];
   var newNext = newParent.firstChild;
   var newCount = 0;
   while (newNext) {
     newCount += 1;
     var newNode = newNext;
     newNext = newNext.nextSibling;
-    var key$1 = getKey(newNode);
-    var keyedOld = key$1 ? keyedNodes[key$1] : null;
-    if (keyedOld) {
-      delete keyedNodes[key$1];
-      if (keyedOld === oldNext) {
-        oldNext = oldNext.nextSibling;
-      } else {
-        oldParent.insertBefore(keyedOld, oldNext);
-      }
-      syncDom(keyedOld, newNode);
-    } else if (oldNext) {
-      var oldNode$1 = oldNext;
-      oldNext = oldNext.nextSibling;
-      if (containsValue(keyedNodes, oldNode$1)) {
-        oldParent.insertBefore(newNode, oldNode$1);
-      } else {
-        syncDom(oldNode$1, newNode);
-      }
-    } else {
-      oldParent.appendChild(newNode);
+    var key = getKey(newNode);
+    if (key) {
+      newKeys.push(key);
     }
   }
 
-  for (var key$2 in keyedNodes) {
-    oldParent.removeChild(keyedNodes[key$2]);
+  var oldKeyedNodes = Object.create(null);
+  var oldNext = oldParent.firstChild;
+  while (oldNext) {
+    var oldNode = oldNext;
+    oldNext = oldNext.nextSibling;
+    var key$1 = getKey(oldNode);
+    if (key$1) {
+      if (newKeys.indexOf(key$1) >= 0) {
+        oldKeyedNodes[key$1] = oldNode;
+      } else {
+        oldParent.removeChild(oldNode);
+      }
+    }
+  }
+
+  oldNext = oldParent.firstChild;
+  newNext = newParent.firstChild;
+  while (newNext) {
+    var newNode$1 = newNext;
+    newNext = newNext.nextSibling;
+    var key$2 = getKey(newNode$1);
+    var oldKeyed = key$2 ? oldKeyedNodes[key$2] : null;
+    if (oldKeyed) {
+      delete oldKeyedNodes[key$2];
+      if (oldKeyed === oldNext) {
+        oldNext = oldNext.nextSibling;
+      } else {
+        oldParent.insertBefore(oldKeyed, oldNext);
+      }
+      syncDom(oldKeyed, newNode$1);
+    } else if (oldNext) {
+      if (key$2) {
+        oldParent.insertBefore(newNode$1, oldNext);
+      } else {
+        while (true) {
+          if (!oldNext) {
+            oldParent.appendChild(newNode$1);
+            break
+          }
+          var oldNode$1 = oldNext;
+          oldNext = oldNext.nextSibling;
+          if (!containsValue(oldKeyedNodes, oldNode$1)) {
+            syncDom(oldNode$1, newNode$1);
+            break
+          }
+        }
+      }
+    } else {
+      oldParent.appendChild(newNode$1);
+    }
+  }
+
+  for (var key$3 in oldKeyedNodes) {
+    oldParent.removeChild(oldKeyedNodes[key$3]);
   }
 
   var overCount = oldParent.childNodes.length - newCount;
