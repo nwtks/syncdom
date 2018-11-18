@@ -30,13 +30,13 @@ function syncDom(oldNode, newNode) {
 
 function syncChildren(oldParent, newParent) {
   const newKeys = []
+  const newNodes = []
   let newNext = newParent.firstChild
-  let newCount = 0
   while (newNext) {
-    newCount += 1
     const newNode = newNext
     newNext = newNext.nextSibling
     const key = getKey(newNode)
+    newNodes.push({ node: newNode, key: key })
     if (key) {
       newKeys.push(key)
     }
@@ -58,11 +58,9 @@ function syncChildren(oldParent, newParent) {
   }
 
   oldNext = oldParent.firstChild
-  newNext = newParent.firstChild
-  while (newNext) {
-    const newNode = newNext
-    newNext = newNext.nextSibling
-    const key = getKey(newNode)
+  newNodes.forEach(n => {
+    const newNode = n.node
+    const key = n.key
     const oldKeyed = key ? oldKeyedNodes[key] : null
     if (oldKeyed) {
       delete oldKeyedNodes[key]
@@ -92,13 +90,13 @@ function syncChildren(oldParent, newParent) {
     } else {
       oldParent.appendChild(newNode)
     }
+  })
+
+  for (const oldKey in oldKeyedNodes) {
+    oldParent.removeChild(oldKeyedNodes[oldKey])
   }
 
-  for (const key in oldKeyedNodes) {
-    oldParent.removeChild(oldKeyedNodes[key])
-  }
-
-  let overCount = oldParent.childNodes.length - newCount
+  let overCount = oldParent.childNodes.length - newNodes.length
   while (--overCount >= 0) {
     oldParent.removeChild(oldParent.lastChild)
   }
@@ -130,8 +128,6 @@ function syncAttrs(oldNode, newNode) {
   const name = oldNode.nodeName
   if (name === 'INPUT') {
     syncBoolProp(oldNode, newNode, 'checked')
-    syncBoolProp(oldNode, newNode, 'disabled')
-    syncBoolProp(oldNode, newNode, 'readOnly')
     const value = newNode.value
     if (oldNode.value !== value) {
       oldNode.value = value
@@ -140,17 +136,12 @@ function syncAttrs(oldNode, newNode) {
       oldNode.removeAttribute('value')
     }
   } else if (name === 'TEXTAREA') {
-    syncBoolProp(oldNode, newNode, 'disabled')
-    syncBoolProp(oldNode, newNode, 'readOnly')
     const value = newNode.value
     if (oldNode.value !== value) {
       oldNode.value = value
     }
   } else if (name === 'OPTION') {
     syncBoolProp(oldNode, newNode, 'selected')
-    syncBoolProp(oldNode, newNode, 'disabled')
-  } else if (name === 'SELECT') {
-    syncBoolProp(oldNode, newNode, 'disabled')
   }
 }
 
@@ -158,9 +149,9 @@ function syncBoolProp(oldNode, newNode, name) {
   if (oldNode[name] !== newNode[name]) {
     oldNode[name] = newNode[name]
     if (oldNode[name]) {
-      oldNode.setAttribute(name.toLowerCase(), '')
+      oldNode.setAttribute(name, '')
     } else {
-      oldNode.removeAttribute(name.toLowerCase())
+      oldNode.removeAttribute(name)
     }
   }
 }

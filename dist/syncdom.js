@@ -32,13 +32,13 @@ function syncDom(oldNode, newNode) {
 
 function syncChildren(oldParent, newParent) {
   var newKeys = [];
+  var newNodes = [];
   var newNext = newParent.firstChild;
-  var newCount = 0;
   while (newNext) {
-    newCount += 1;
     var newNode = newNext;
     newNext = newNext.nextSibling;
     var key = getKey(newNode);
+    newNodes.push({ node: newNode, key: key });
     if (key) {
       newKeys.push(key);
     }
@@ -60,47 +60,45 @@ function syncChildren(oldParent, newParent) {
   }
 
   oldNext = oldParent.firstChild;
-  newNext = newParent.firstChild;
-  while (newNext) {
-    var newNode$1 = newNext;
-    newNext = newNext.nextSibling;
-    var key$2 = getKey(newNode$1);
-    var oldKeyed = key$2 ? oldKeyedNodes[key$2] : null;
+  newNodes.forEach(function (n) {
+    var newNode = n.node;
+    var key = n.key;
+    var oldKeyed = key ? oldKeyedNodes[key] : null;
     if (oldKeyed) {
-      delete oldKeyedNodes[key$2];
+      delete oldKeyedNodes[key];
       if (oldKeyed === oldNext) {
         oldNext = oldNext.nextSibling;
       } else {
         oldParent.insertBefore(oldKeyed, oldNext);
       }
-      syncDom(oldKeyed, newNode$1);
+      syncDom(oldKeyed, newNode);
     } else if (oldNext) {
-      if (key$2) {
-        oldParent.insertBefore(newNode$1, oldNext);
+      if (key) {
+        oldParent.insertBefore(newNode, oldNext);
       } else {
         while (true) {
           if (!oldNext) {
-            oldParent.appendChild(newNode$1);
+            oldParent.appendChild(newNode);
             break
           }
-          var oldNode$1 = oldNext;
+          var oldNode = oldNext;
           oldNext = oldNext.nextSibling;
-          if (!containsValue(oldKeyedNodes, oldNode$1)) {
-            syncDom(oldNode$1, newNode$1);
+          if (!containsValue(oldKeyedNodes, oldNode)) {
+            syncDom(oldNode, newNode);
             break
           }
         }
       }
     } else {
-      oldParent.appendChild(newNode$1);
+      oldParent.appendChild(newNode);
     }
+  });
+
+  for (var oldKey in oldKeyedNodes) {
+    oldParent.removeChild(oldKeyedNodes[oldKey]);
   }
 
-  for (var key$3 in oldKeyedNodes) {
-    oldParent.removeChild(oldKeyedNodes[key$3]);
-  }
-
-  var overCount = oldParent.childNodes.length - newCount;
+  var overCount = oldParent.childNodes.length - newNodes.length;
   while (--overCount >= 0) {
     oldParent.removeChild(oldParent.lastChild);
   }
@@ -132,8 +130,6 @@ function syncAttrs(oldNode, newNode) {
   var name = oldNode.nodeName;
   if (name === 'INPUT') {
     syncBoolProp(oldNode, newNode, 'checked');
-    syncBoolProp(oldNode, newNode, 'disabled');
-    syncBoolProp(oldNode, newNode, 'readOnly');
     var value = newNode.value;
     if (oldNode.value !== value) {
       oldNode.value = value;
@@ -142,17 +138,12 @@ function syncAttrs(oldNode, newNode) {
       oldNode.removeAttribute('value');
     }
   } else if (name === 'TEXTAREA') {
-    syncBoolProp(oldNode, newNode, 'disabled');
-    syncBoolProp(oldNode, newNode, 'readOnly');
     var value$1 = newNode.value;
     if (oldNode.value !== value$1) {
       oldNode.value = value$1;
     }
   } else if (name === 'OPTION') {
     syncBoolProp(oldNode, newNode, 'selected');
-    syncBoolProp(oldNode, newNode, 'disabled');
-  } else if (name === 'SELECT') {
-    syncBoolProp(oldNode, newNode, 'disabled');
   }
 }
 
@@ -160,9 +151,9 @@ function syncBoolProp(oldNode, newNode, name) {
   if (oldNode[name] !== newNode[name]) {
     oldNode[name] = newNode[name];
     if (oldNode[name]) {
-      oldNode.setAttribute(name.toLowerCase(), '');
+      oldNode.setAttribute(name, '');
     } else {
-      oldNode.removeAttribute(name.toLowerCase());
+      oldNode.removeAttribute(name);
     }
   }
 }
