@@ -99,6 +99,12 @@ function syncChildren(oldParent, newParent) {
 }
 
 function syncAttrs(oldNode, newNode) {
+  delAttrs(oldNode, newNode);
+  setAttrs(oldNode, newNode);
+  syncFormProp(oldNode, newNode);
+}
+
+function delAttrs(oldNode, newNode) {
   var oldAttrs = oldNode.attributes;
   for (var i = oldAttrs.length - 1; i >= 0; i -= 1) {
     var a = oldAttrs[i];
@@ -108,19 +114,23 @@ function syncAttrs(oldNode, newNode) {
       oldNode.removeAttributeNS(ns, n);
     }
   }
+}
 
+function setAttrs(oldNode, newNode) {
   var newAttrs = newNode.attributes;
-  for (var i$1 = newAttrs.length - 1; i$1 >= 0; i$1 -= 1) {
-    var a$1 = newAttrs[i$1];
-    var ns$1 = a$1.namespaceURI;
-    var n$1 = a$1.localName;
-    var v1 = newNode.getAttributeNS(ns$1, n$1);
-    var v2 = oldNode.getAttributeNS(ns$1, n$1);
+  for (var i = newAttrs.length - 1; i >= 0; i -= 1) {
+    var a = newAttrs[i];
+    var ns = a.namespaceURI;
+    var n = a.localName;
+    var v1 = newNode.getAttributeNS(ns, n);
+    var v2 = oldNode.getAttributeNS(ns, n);
     if (v1 !== v2) {
-      oldNode.setAttributeNS(ns$1, n$1, v1);
+      oldNode.setAttributeNS(ns, n, v1);
     }
   }
+}
 
+function syncFormProp(oldNode, newNode) {
   var name = oldNode.nodeName;
   if (name === 'INPUT') {
     syncBoolProp(oldNode, newNode, 'checked');

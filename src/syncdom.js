@@ -97,6 +97,12 @@ function syncChildren(oldParent, newParent) {
 }
 
 function syncAttrs(oldNode, newNode) {
+  delAttrs(oldNode, newNode)
+  setAttrs(oldNode, newNode)
+  syncFormProp(oldNode, newNode)
+}
+
+function delAttrs(oldNode, newNode) {
   const oldAttrs = oldNode.attributes
   for (let i = oldAttrs.length - 1; i >= 0; i -= 1) {
     const a = oldAttrs[i]
@@ -106,7 +112,9 @@ function syncAttrs(oldNode, newNode) {
       oldNode.removeAttributeNS(ns, n)
     }
   }
+}
 
+function setAttrs(oldNode, newNode) {
   const newAttrs = newNode.attributes
   for (let i = newAttrs.length - 1; i >= 0; i -= 1) {
     const a = newAttrs[i]
@@ -118,7 +126,9 @@ function syncAttrs(oldNode, newNode) {
       oldNode.setAttributeNS(ns, n, v1)
     }
   }
+}
 
+function syncFormProp(oldNode, newNode) {
   const name = oldNode.nodeName
   if (name === 'INPUT') {
     syncBoolProp(oldNode, newNode, 'checked')
