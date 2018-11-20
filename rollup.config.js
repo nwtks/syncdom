@@ -14,7 +14,7 @@ export default [
     input: 'src/syncdom.js',
     output: {
       name: 'syncdom',
-      file: 'dist/syncdom-umd.js',
+      file: 'dist/syncdom.min.js',
       format: 'umd'
     },
     plugins: [buble(), uglify()]

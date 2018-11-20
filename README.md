@@ -1,3 +1,3 @@
 # syncdom
 
-simple dom sync.
+small dom sync.

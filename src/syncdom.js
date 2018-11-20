@@ -31,33 +31,27 @@ function syncDom(oldNode, newNode) {
 function syncChildren(oldParent, newParent) {
   const newKeys = []
   const newNodes = []
-  let newNext = newParent.firstChild
-  while (newNext) {
-    const newNode = newNext
-    newNext = newNext.nextSibling
-    const key = getKey(newNode)
-    newNodes.push({ node: newNode, key: key })
-    if (key) {
-      newKeys.push(key)
+  for (let nNode = newParent.firstChild; nNode; nNode = nNode.nextSibling) {
+    const nKey = getKey(nNode)
+    newNodes.push({ node: nNode, key: nKey })
+    if (nKey) {
+      newKeys.push(nKey)
     }
   }
 
   const oldKeyedNodes = Object.create(null)
-  let oldNext = oldParent.firstChild
-  while (oldNext) {
-    const oldNode = oldNext
-    oldNext = oldNext.nextSibling
-    const key = getKey(oldNode)
-    if (key) {
-      if (newKeys.indexOf(key) >= 0) {
-        oldKeyedNodes[key] = oldNode
+  for (let oNode = oldParent.firstChild; oNode; oNode = oNode.nextSibling) {
+    const oKey = getKey(oNode)
+    if (oKey) {
+      if (newKeys.indexOf(oKey) >= 0) {
+        oldKeyedNodes[oKey] = oNode
       } else {
-        oldParent.removeChild(oldNode)
+        oldParent.removeChild(oNode)
       }
     }
   }
 
-  oldNext = oldParent.firstChild
+  let oldNext = oldParent.firstChild
   newNodes.forEach(n => {
     const newNode = n.node
     const key = n.key
@@ -92,8 +86,8 @@ function syncChildren(oldParent, newParent) {
     }
   })
 
-  for (const oldKey in oldKeyedNodes) {
-    oldParent.removeChild(oldKeyedNodes[oldKey])
+  for (const key in oldKeyedNodes) {
+    oldParent.removeChild(oldKeyedNodes[key])
   }
 
   let overCount = oldParent.childNodes.length - newNodes.length

@@ -33,33 +33,27 @@ function syncDom(oldNode, newNode) {
 function syncChildren(oldParent, newParent) {
   var newKeys = [];
   var newNodes = [];
-  var newNext = newParent.firstChild;
-  while (newNext) {
-    var newNode = newNext;
-    newNext = newNext.nextSibling;
-    var key = getKey(newNode);
-    newNodes.push({ node: newNode, key: key });
-    if (key) {
-      newKeys.push(key);
+  for (var nNode = newParent.firstChild; nNode; nNode = nNode.nextSibling) {
+    var nKey = getKey(nNode);
+    newNodes.push({ node: nNode, key: nKey });
+    if (nKey) {
+      newKeys.push(nKey);
     }
   }
 
   var oldKeyedNodes = Object.create(null);
-  var oldNext = oldParent.firstChild;
-  while (oldNext) {
-    var oldNode = oldNext;
-    oldNext = oldNext.nextSibling;
-    var key$1 = getKey(oldNode);
-    if (key$1) {
-      if (newKeys.indexOf(key$1) >= 0) {
-        oldKeyedNodes[key$1] = oldNode;
+  for (var oNode = oldParent.firstChild; oNode; oNode = oNode.nextSibling) {
+    var oKey = getKey(oNode);
+    if (oKey) {
+      if (newKeys.indexOf(oKey) >= 0) {
+        oldKeyedNodes[oKey] = oNode;
       } else {
-        oldParent.removeChild(oldNode);
+        oldParent.removeChild(oNode);
       }
     }
   }
 
-  oldNext = oldParent.firstChild;
+  var oldNext = oldParent.firstChild;
   newNodes.forEach(function (n) {
     var newNode = n.node;
     var key = n.key;
@@ -94,8 +88,8 @@ function syncChildren(oldParent, newParent) {
     }
   });
 
-  for (var oldKey in oldKeyedNodes) {
-    oldParent.removeChild(oldKeyedNodes[oldKey]);
+  for (var key in oldKeyedNodes) {
+    oldParent.removeChild(oldKeyedNodes[key]);
   }
 
   var overCount = oldParent.childNodes.length - newNodes.length;
