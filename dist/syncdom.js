@@ -1,6 +1,57 @@
 'use strict';
 
 var ELEMENT_NODE = 1;
+var LISTENERS = [
+  'onfocus',
+  'onblur',
+  'onfocusin',
+  'onfocusout',
+  'onsubmit',
+  'onreset',
+  'onchange',
+  'oninput',
+  'onkeydown',
+  'onkeyup',
+  'onkeypress',
+  'oncompositionstart',
+  'oncompositionend',
+  'oncompositionupdate',
+  'onclick',
+  'ondblclick',
+  'onmouseenter',
+  'onmouseleave',
+  'onmouseover',
+  'onmouseout',
+  'onmousedown',
+  'onmouseup',
+  'onmousemove',
+  'onwheel',
+  'ontouchstart',
+  'ontouchend',
+  'ontouchmove',
+  'ontouchcancel',
+  'ondrag',
+  'ondrop',
+  'ondragstart',
+  'ondragend',
+  'ondragenter',
+  'ondragleave',
+  'ondragover',
+  'onscroll',
+  'onresize',
+  'onselect',
+  'onerror',
+  'onload',
+  'onunload',
+  'onbeforeunload',
+  'onabort',
+  'onhashchange',
+  'oncontextmenu',
+  'onpageshow',
+  'onpagehide',
+  'onvisibilitychange',
+  'oninvalid'
+];
 
 var isArray = Array.isArray;
 
@@ -124,7 +175,8 @@ function removeOldNodes(parent, nodes) {
 function syncAttrs(oldNode, node) {
   delAttrs(oldNode, node);
   setAttrs(oldNode, node);
-  syncFormProp(oldNode, node);
+  syncListeners(oldNode, node);
+  syncFormProps(oldNode, node);
 }
 
 function delAttrs(oldNode, node) {
@@ -153,7 +205,22 @@ function setAttrs(oldNode, node) {
   }
 }
 
-function syncFormProp(oldNode, node) {
+function syncListeners(oldNode, node) {
+  LISTENERS.forEach(function (k) {
+    var f = node[k];
+    if (f) {
+      if (f !== oldNode[k]) {
+        oldNode[k] = f;
+      }
+    } else {
+      if (oldNode[k]) {
+        oldNode[k] = void 0;
+      }
+    }
+  });
+}
+
+function syncFormProps(oldNode, node) {
   var name = oldNode.nodeName;
   if (name === 'INPUT') {
     syncBoolProp(oldNode, node, 'checked');
