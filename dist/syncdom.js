@@ -173,25 +173,25 @@ function removeOldNodes(parent, nodes) {
 }
 
 function syncAttrs(oldNode, node) {
-  delAttrs(oldNode, node);
-  setAttrs(oldNode, node);
+  removeAttrs(oldNode, node);
+  updateAttrs(oldNode, node);
   syncListeners(oldNode, node);
   syncFormProps(oldNode, node);
 }
 
-function delAttrs(oldNode, node) {
+function removeAttrs(oldNode, node) {
   var oldAttrs = oldNode.attributes;
   for (var i = oldAttrs.length - 1; i >= 0; --i) {
     var a = oldAttrs[i];
     var ns = a.namespaceURI;
     var n = a.localName;
-    if (!node.hasAttributeNS(ns, n)) {
+    if (!node.hasAttributeNS(ns, n) && oldNode.hasAttributeNS(ns, n)) {
       oldNode.removeAttributeNS(ns, n);
     }
   }
 }
 
-function setAttrs(oldNode, node) {
+function updateAttrs(oldNode, node) {
   var attrs = node.attributes;
   for (var i = attrs.length - 1; i >= 0; --i) {
     var a = attrs[i];
@@ -228,8 +228,11 @@ function syncFormProps(oldNode, node) {
     if (oldNode.value !== value) {
       oldNode.value = value;
     }
-    if (!node.hasAttributeNS(null, 'value')) {
-      oldNode.removeAttribute('value');
+    if (
+      !node.hasAttributeNS(null, 'value') &&
+      oldNode.hasAttributeNS(null, 'value')
+    ) {
+      oldNode.removeAttributeNS(null, 'value');
     }
   } else if (name === 'TEXTAREA') {
     var value2 = node.value;
@@ -245,22 +248,26 @@ function syncBoolProp(oldNode, node, name) {
   if (oldNode[name] !== node[name]) {
     oldNode[name] = node[name];
     if (oldNode[name]) {
-      oldNode.setAttribute(name, '');
+      if (!oldNode.hasAttributeNS(null, name)) {
+        oldNode.setAttributeNS(null, name, '');
+      }
     } else {
-      oldNode.removeAttribute(name);
+      if (oldNode.hasAttributeNS(null, name)) {
+        oldNode.removeAttributeNS(null, name);
+      }
     }
   }
 }
 
 function isSameNode(n1, n2) {
-  var eq1 = n1.getAttribute('domsame');
-  var eq2 = n2.getAttribute('domsame');
+  var eq1 = n1.getAttributeNS(null, 'domsame');
+  var eq2 = n2.getAttributeNS(null, 'domsame');
   return (eq1 && eq2 && eq1 === eq2) || n2.isSameNode(n1)
 }
 
 function getKey(n) {
   if (n.nodeType === ELEMENT_NODE) {
-    return n.getAttribute('domkey')
+    return n.getAttributeNS(null, 'domkey')
   }
 }
 
