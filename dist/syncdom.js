@@ -54,8 +54,9 @@ var LISTENERS = [
 ];
 
 var isArray = Array.isArray;
+var getOwnPropertyNames = Object.getOwnPropertyNames;
 
-function sync(parent, node) {
+var sync = function (parent, node) {
   if (isArray(node)) {
     syncChildren(parent, node);
   } else if (node != null) {
@@ -63,9 +64,9 @@ function sync(parent, node) {
   } else {
     removeChildren(parent);
   }
-}
+};
 
-function syncChildren(parent, nodes) {
+var syncChildren = function (parent, nodes) {
   if (parent.nodeName === 'TEXTAREA') {
     return
   }
@@ -112,9 +113,9 @@ function syncChildren(parent, nodes) {
 
   removeKeyedNodes(parent, oldKeyedNodes);
   removeOldNodes(parent, nodes);
-}
+};
 
-function syncNode(oldNode, node) {
+var syncNode = function (oldNode, node) {
   if (oldNode.nodeType === node.nodeType) {
     if (oldNode.nodeType === ELEMENT_NODE) {
       if (isSameNode(oldNode, node)) {
@@ -138,9 +139,9 @@ function syncNode(oldNode, node) {
   } else {
     replaceNode(oldNode, node);
   }
-}
+};
 
-function getKeyedNodes(parent, nodeKeys) {
+var getKeyedNodes = function (parent, nodeKeys) {
   var keys = nodeKeys.map(function (n) { return n.key; }).filter(function (k) { return k; });
   var keyedNodes = Object.create(null);
   for (var node = parent.firstChild; node; node = node.nextSibling) {
@@ -154,34 +155,31 @@ function getKeyedNodes(parent, nodeKeys) {
     }
   }
   return keyedNodes
-}
+};
 
-function removeKeyedNodes(parent, keyedNodes) {
-  for (var k in keyedNodes) {
-    removeChild(parent, keyedNodes[k]);
-  }
-}
+var removeKeyedNodes = function (parent, keyedNodes) { return getOwnPropertyNames(keyedNodes).forEach(function (k) { return removeChild(parent, keyedNodes[k]); }
+  ); };
 
-function removeOldNodes(parent, nodes) {
+var removeOldNodes = function (parent, nodes) {
   for (
     var overCount = parent.childNodes.length - nodes.length;
     overCount > 0;
-    --overCount
+    overCount -= 1
   ) {
     removeChild(parent, parent.lastChild);
   }
-}
+};
 
-function syncAttrs(oldNode, node) {
+var syncAttrs = function (oldNode, node) {
   removeAttrs(oldNode, node);
   updateAttrs(oldNode, node);
   syncListeners(oldNode, node);
   syncFormProps(oldNode, node);
-}
+};
 
-function removeAttrs(oldNode, node) {
+var removeAttrs = function (oldNode, node) {
   var oldAttrs = oldNode.attributes;
-  for (var i = oldAttrs.length - 1; i >= 0; --i) {
+  for (var i = oldAttrs.length - 1; i >= 0; i -= 1) {
     var a = oldAttrs[i];
     var ns = a.namespaceURI;
     var n = a.localName;
@@ -189,11 +187,11 @@ function removeAttrs(oldNode, node) {
       oldNode.removeAttributeNS(ns, n);
     }
   }
-}
+};
 
-function updateAttrs(oldNode, node) {
+var updateAttrs = function (oldNode, node) {
   var attrs = node.attributes;
-  for (var i = attrs.length - 1; i >= 0; --i) {
+  for (var i = attrs.length - 1; i >= 0; i -= 1) {
     var a = attrs[i];
     var ns = a.namespaceURI;
     var n = a.localName;
@@ -203,9 +201,9 @@ function updateAttrs(oldNode, node) {
       oldNode.setAttributeNS(ns, n, v1);
     }
   }
-}
+};
 
-function syncListeners(oldNode, node) {
+var syncListeners = function (oldNode, node) {
   LISTENERS.forEach(function (k) {
     var f = node[k];
     if (f) {
@@ -218,9 +216,9 @@ function syncListeners(oldNode, node) {
       }
     }
   });
-}
+};
 
-function syncFormProps(oldNode, node) {
+var syncFormProps = function (oldNode, node) {
   var name = oldNode.nodeName;
   if (name === 'INPUT') {
     syncBoolProp(oldNode, node, 'checked');
@@ -242,9 +240,9 @@ function syncFormProps(oldNode, node) {
   } else if (name === 'OPTION') {
     syncBoolProp(oldNode, node, 'selected');
   }
-}
+};
 
-function syncBoolProp(oldNode, node, name) {
+var syncBoolProp = function (oldNode, node, name) {
   if (oldNode[name] !== node[name]) {
     oldNode[name] = node[name];
     if (oldNode[name]) {
@@ -257,21 +255,17 @@ function syncBoolProp(oldNode, node, name) {
       }
     }
   }
-}
+};
 
-function isSameNode(n1, n2) {
+var isSameNode = function (n1, n2) {
   var eq1 = n1.getAttributeNS(null, 'domsame');
   var eq2 = n2.getAttributeNS(null, 'domsame');
   return (eq1 && eq2 && eq1 === eq2) || n2.isSameNode(n1)
-}
+};
 
-function getKey(n) {
-  if (n.nodeType === ELEMENT_NODE) {
-    return n.getAttributeNS(null, 'domkey')
-  }
-}
+var getKey = function (n) { return n.nodeType === ELEMENT_NODE ? n.getAttributeNS(null, 'domkey') : null; };
 
-function removeChildren(parent) {
+var removeChildren = function (parent) {
   for (
     var lastChild = parent.lastChild;
     lastChild;
@@ -279,31 +273,17 @@ function removeChildren(parent) {
   ) {
     removeChild(parent, lastChild);
   }
-}
+};
 
-function replaceNode(oldNode, node) {
-  oldNode.parentNode.replaceChild(node, oldNode);
-}
+var replaceNode = function (oldNode, node) { return oldNode.parentNode.replaceChild(node, oldNode); };
 
-function appendChild(parent, node) {
-  parent.appendChild(node);
-}
+var appendChild = function (parent, node) { return parent.appendChild(node); };
 
-function insertBefore(parent, node, position) {
-  parent.insertBefore(node, position);
-}
+var insertBefore = function (parent, node, position) { return parent.insertBefore(node, position); };
 
-function removeChild(parent, node) {
-  parent.removeChild(node);
-}
+var removeChild = function (parent, node) { return parent.removeChild(node); };
 
-function containsValue(obj, v) {
-  for (var k in obj) {
-    if (obj[k] === v) {
-      return true
-    }
-  }
-  return false
-}
+var containsValue = function (obj, v) { return obj != null &&
+  getOwnPropertyNames(obj).reduce(function (a, k) { return (obj[k] === v ? true : a); }, false); };
 
 module.exports = sync;

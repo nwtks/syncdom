@@ -52,8 +52,9 @@ const LISTENERS = [
 ]
 
 const isArray = Array.isArray
+const getOwnPropertyNames = Object.getOwnPropertyNames
 
-function sync(parent, node) {
+const sync = (parent, node) => {
   if (isArray(node)) {
     syncChildren(parent, node)
   } else if (node != null) {
@@ -63,7 +64,7 @@ function sync(parent, node) {
   }
 }
 
-function syncChildren(parent, nodes) {
+const syncChildren = (parent, nodes) => {
   if (parent.nodeName === 'TEXTAREA') {
     return
   }
@@ -112,7 +113,7 @@ function syncChildren(parent, nodes) {
   removeOldNodes(parent, nodes)
 }
 
-function syncNode(oldNode, node) {
+const syncNode = (oldNode, node) => {
   if (oldNode.nodeType === node.nodeType) {
     if (oldNode.nodeType === ELEMENT_NODE) {
       if (isSameNode(oldNode, node)) {
@@ -138,7 +139,7 @@ function syncNode(oldNode, node) {
   }
 }
 
-function getKeyedNodes(parent, nodeKeys) {
+const getKeyedNodes = (parent, nodeKeys) => {
   const keys = nodeKeys.map(n => n.key).filter(k => k)
   const keyedNodes = Object.create(null)
   for (let node = parent.firstChild; node; node = node.nextSibling) {
@@ -154,32 +155,31 @@ function getKeyedNodes(parent, nodeKeys) {
   return keyedNodes
 }
 
-function removeKeyedNodes(parent, keyedNodes) {
-  for (const k in keyedNodes) {
+const removeKeyedNodes = (parent, keyedNodes) =>
+  getOwnPropertyNames(keyedNodes).forEach(k =>
     removeChild(parent, keyedNodes[k])
-  }
-}
+  )
 
-function removeOldNodes(parent, nodes) {
+const removeOldNodes = (parent, nodes) => {
   for (
     let overCount = parent.childNodes.length - nodes.length;
     overCount > 0;
-    --overCount
+    overCount -= 1
   ) {
     removeChild(parent, parent.lastChild)
   }
 }
 
-function syncAttrs(oldNode, node) {
+const syncAttrs = (oldNode, node) => {
   removeAttrs(oldNode, node)
   updateAttrs(oldNode, node)
   syncListeners(oldNode, node)
   syncFormProps(oldNode, node)
 }
 
-function removeAttrs(oldNode, node) {
+const removeAttrs = (oldNode, node) => {
   const oldAttrs = oldNode.attributes
-  for (let i = oldAttrs.length - 1; i >= 0; --i) {
+  for (let i = oldAttrs.length - 1; i >= 0; i -= 1) {
     const a = oldAttrs[i]
     const ns = a.namespaceURI
     const n = a.localName
@@ -189,9 +189,9 @@ function removeAttrs(oldNode, node) {
   }
 }
 
-function updateAttrs(oldNode, node) {
+const updateAttrs = (oldNode, node) => {
   const attrs = node.attributes
-  for (let i = attrs.length - 1; i >= 0; --i) {
+  for (let i = attrs.length - 1; i >= 0; i -= 1) {
     const a = attrs[i]
     const ns = a.namespaceURI
     const n = a.localName
@@ -203,7 +203,7 @@ function updateAttrs(oldNode, node) {
   }
 }
 
-function syncListeners(oldNode, node) {
+const syncListeners = (oldNode, node) => {
   LISTENERS.forEach(k => {
     const f = node[k]
     if (f) {
@@ -218,7 +218,7 @@ function syncListeners(oldNode, node) {
   })
 }
 
-function syncFormProps(oldNode, node) {
+const syncFormProps = (oldNode, node) => {
   const name = oldNode.nodeName
   if (name === 'INPUT') {
     syncBoolProp(oldNode, node, 'checked')
@@ -242,7 +242,7 @@ function syncFormProps(oldNode, node) {
   }
 }
 
-function syncBoolProp(oldNode, node, name) {
+const syncBoolProp = (oldNode, node, name) => {
   if (oldNode[name] !== node[name]) {
     oldNode[name] = node[name]
     if (oldNode[name]) {
@@ -257,19 +257,16 @@ function syncBoolProp(oldNode, node, name) {
   }
 }
 
-function isSameNode(n1, n2) {
+const isSameNode = (n1, n2) => {
   const eq1 = n1.getAttributeNS(null, 'domsame')
   const eq2 = n2.getAttributeNS(null, 'domsame')
   return (eq1 && eq2 && eq1 === eq2) || n2.isSameNode(n1)
 }
 
-function getKey(n) {
-  if (n.nodeType === ELEMENT_NODE) {
-    return n.getAttributeNS(null, 'domkey')
-  }
-}
+const getKey = n =>
+  n.nodeType === ELEMENT_NODE ? n.getAttributeNS(null, 'domkey') : null
 
-function removeChildren(parent) {
+const removeChildren = parent => {
   for (
     let lastChild = parent.lastChild;
     lastChild;
@@ -279,29 +276,18 @@ function removeChildren(parent) {
   }
 }
 
-function replaceNode(oldNode, node) {
+const replaceNode = (oldNode, node) =>
   oldNode.parentNode.replaceChild(node, oldNode)
-}
 
-function appendChild(parent, node) {
-  parent.appendChild(node)
-}
+const appendChild = (parent, node) => parent.appendChild(node)
 
-function insertBefore(parent, node, position) {
+const insertBefore = (parent, node, position) =>
   parent.insertBefore(node, position)
-}
 
-function removeChild(parent, node) {
-  parent.removeChild(node)
-}
+const removeChild = (parent, node) => parent.removeChild(node)
 
-function containsValue(obj, v) {
-  for (const k in obj) {
-    if (obj[k] === v) {
-      return true
-    }
-  }
-  return false
-}
+const containsValue = (obj, v) =>
+  obj != null &&
+  getOwnPropertyNames(obj).reduce((a, k) => (obj[k] === v ? true : a), false)
 
 export default sync
