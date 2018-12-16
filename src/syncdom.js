@@ -53,6 +53,7 @@ const LISTENERS = [
 
 const isArray = Array.isArray
 const getOwnPropertyNames = Object.getOwnPropertyNames
+const slice = Array.prototype.slice
 
 const sync = (parent, node) => {
   if (isArray(node)) {
@@ -122,9 +123,7 @@ const syncNode = (oldNode, node) => {
       if (oldNode.nodeName === node.nodeName) {
         syncAttrs(oldNode, node)
         const children = []
-        for (let child = node.firstChild; child; child = child.nextSibling) {
-          children.push(child)
-        }
+        walkChildren(node, child => children.push(child))
         syncChildren(oldNode, children)
       } else {
         replaceNode(oldNode, node)
@@ -142,16 +141,16 @@ const syncNode = (oldNode, node) => {
 const getKeyedNodes = (parent, nodeKeys) => {
   const keys = nodeKeys.map(n => n.key).filter(k => k)
   const keyedNodes = Object.create(null)
-  for (let node = parent.firstChild; node; node = node.nextSibling) {
-    const k = getKey(node)
-    if (k) {
-      if (keys.indexOf(k) >= 0) {
-        keyedNodes[k] = node
+  walkChildren(parent, node => {
+    const nodeKey = getKey(node)
+    if (nodeKey) {
+      if (keys.indexOf(nodeKey) >= 0) {
+        keyedNodes[nodeKey] = node
       } else {
         removeChild(parent, node)
       }
     }
-  }
+  })
   return keyedNodes
 }
 
@@ -161,13 +160,9 @@ const removeKeyedNodes = (parent, keyedNodes) =>
   )
 
 const removeOldNodes = (parent, nodes) => {
-  for (
-    let overCount = parent.childNodes.length - nodes.length;
-    overCount > 0;
-    overCount -= 1
-  ) {
+  times(parent.childNodes.length - nodes.length, () =>
     removeChild(parent, parent.lastChild)
-  }
+  )
 }
 
 const syncAttrs = (oldNode, node) => {
@@ -178,21 +173,17 @@ const syncAttrs = (oldNode, node) => {
 }
 
 const removeAttrs = (oldNode, node) => {
-  const oldAttrs = oldNode.attributes
-  for (let i = oldAttrs.length - 1; i >= 0; i -= 1) {
-    const a = oldAttrs[i]
+  slice.call(oldNode.attributes).forEach(a => {
     const ns = a.namespaceURI
     const n = a.localName
     if (!node.hasAttributeNS(ns, n) && oldNode.hasAttributeNS(ns, n)) {
       oldNode.removeAttributeNS(ns, n)
     }
-  }
+  })
 }
 
 const updateAttrs = (oldNode, node) => {
-  const attrs = node.attributes
-  for (let i = attrs.length - 1; i >= 0; i -= 1) {
-    const a = attrs[i]
+  slice.call(node.attributes).forEach(a => {
     const ns = a.namespaceURI
     const n = a.localName
     const v1 = node.getAttributeNS(ns, n)
@@ -200,7 +191,7 @@ const updateAttrs = (oldNode, node) => {
     if (v1 !== v2) {
       oldNode.setAttributeNS(ns, n, v1)
     }
-  }
+  })
 }
 
 const syncListeners = (oldNode, node) => {
@@ -263,8 +254,8 @@ const isSameNode = (n1, n2) => {
   return (eq1 && eq2 && eq1 === eq2) || n2.isSameNode(n1)
 }
 
-const getKey = n =>
-  n.nodeType === ELEMENT_NODE ? n.getAttributeNS(null, 'domkey') : null
+const getKey = node =>
+  node.nodeType === ELEMENT_NODE ? node.getAttributeNS(null, 'domkey') : null
 
 const removeChildren = parent => {
   for (
@@ -286,8 +277,19 @@ const insertBefore = (parent, node, position) =>
 
 const removeChild = (parent, node) => parent.removeChild(node)
 
-const containsValue = (obj, v) =>
-  obj != null &&
-  getOwnPropertyNames(obj).reduce((a, k) => (obj[k] === v ? true : a), false)
+const containsValue = (obj, value) =>
+  obj != null && getOwnPropertyNames(obj).some(k => obj[k] === value)
+
+const walkChildren = (node, callback) => {
+  for (let c = node.firstChild; c; c = c.nextSibling) {
+    callback(c)
+  }
+}
+
+const times = (n, callback) => {
+  for (let i = 0; i < n; i += 1) {
+    callback(i)
+  }
+}
 
 export default sync

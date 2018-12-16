@@ -55,6 +55,7 @@ var LISTENERS = [
 
 var isArray = Array.isArray;
 var getOwnPropertyNames = Object.getOwnPropertyNames;
+var slice = Array.prototype.slice;
 
 var sync = function (parent, node) {
   if (isArray(node)) {
@@ -124,9 +125,7 @@ var syncNode = function (oldNode, node) {
       if (oldNode.nodeName === node.nodeName) {
         syncAttrs(oldNode, node);
         var children = [];
-        for (var child = node.firstChild; child; child = child.nextSibling) {
-          children.push(child);
-        }
+        walkChildren(node, function (child) { return children.push(child); });
         syncChildren(oldNode, children);
       } else {
         replaceNode(oldNode, node);
@@ -144,16 +143,16 @@ var syncNode = function (oldNode, node) {
 var getKeyedNodes = function (parent, nodeKeys) {
   var keys = nodeKeys.map(function (n) { return n.key; }).filter(function (k) { return k; });
   var keyedNodes = Object.create(null);
-  for (var node = parent.firstChild; node; node = node.nextSibling) {
-    var k = getKey(node);
-    if (k) {
-      if (keys.indexOf(k) >= 0) {
-        keyedNodes[k] = node;
+  walkChildren(parent, function (node) {
+    var nodeKey = getKey(node);
+    if (nodeKey) {
+      if (keys.indexOf(nodeKey) >= 0) {
+        keyedNodes[nodeKey] = node;
       } else {
         removeChild(parent, node);
       }
     }
-  }
+  });
   return keyedNodes
 };
 
@@ -161,13 +160,8 @@ var removeKeyedNodes = function (parent, keyedNodes) { return getOwnPropertyName
   ); };
 
 var removeOldNodes = function (parent, nodes) {
-  for (
-    var overCount = parent.childNodes.length - nodes.length;
-    overCount > 0;
-    overCount -= 1
-  ) {
-    removeChild(parent, parent.lastChild);
-  }
+  times(parent.childNodes.length - nodes.length, function () { return removeChild(parent, parent.lastChild); }
+  );
 };
 
 var syncAttrs = function (oldNode, node) {
@@ -178,21 +172,17 @@ var syncAttrs = function (oldNode, node) {
 };
 
 var removeAttrs = function (oldNode, node) {
-  var oldAttrs = oldNode.attributes;
-  for (var i = oldAttrs.length - 1; i >= 0; i -= 1) {
-    var a = oldAttrs[i];
+  slice.call(oldNode.attributes).forEach(function (a) {
     var ns = a.namespaceURI;
     var n = a.localName;
     if (!node.hasAttributeNS(ns, n) && oldNode.hasAttributeNS(ns, n)) {
       oldNode.removeAttributeNS(ns, n);
     }
-  }
+  });
 };
 
 var updateAttrs = function (oldNode, node) {
-  var attrs = node.attributes;
-  for (var i = attrs.length - 1; i >= 0; i -= 1) {
-    var a = attrs[i];
+  slice.call(node.attributes).forEach(function (a) {
     var ns = a.namespaceURI;
     var n = a.localName;
     var v1 = node.getAttributeNS(ns, n);
@@ -200,7 +190,7 @@ var updateAttrs = function (oldNode, node) {
     if (v1 !== v2) {
       oldNode.setAttributeNS(ns, n, v1);
     }
-  }
+  });
 };
 
 var syncListeners = function (oldNode, node) {
@@ -263,7 +253,7 @@ var isSameNode = function (n1, n2) {
   return (eq1 && eq2 && eq1 === eq2) || n2.isSameNode(n1)
 };
 
-var getKey = function (n) { return n.nodeType === ELEMENT_NODE ? n.getAttributeNS(null, 'domkey') : null; };
+var getKey = function (node) { return node.nodeType === ELEMENT_NODE ? node.getAttributeNS(null, 'domkey') : null; };
 
 var removeChildren = function (parent) {
   for (
@@ -283,7 +273,18 @@ var insertBefore = function (parent, node, position) { return parent.insertBefor
 
 var removeChild = function (parent, node) { return parent.removeChild(node); };
 
-var containsValue = function (obj, v) { return obj != null &&
-  getOwnPropertyNames(obj).reduce(function (a, k) { return (obj[k] === v ? true : a); }, false); };
+var containsValue = function (obj, value) { return obj != null && getOwnPropertyNames(obj).some(function (k) { return obj[k] === value; }); };
+
+var walkChildren = function (node, callback) {
+  for (var c = node.firstChild; c; c = c.nextSibling) {
+    callback(c);
+  }
+};
+
+var times = function (n, callback) {
+  for (var i = 0; i < n; i += 1) {
+    callback(i);
+  }
+};
 
 module.exports = sync;
