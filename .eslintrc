@@ -1,5 +1,6 @@
 {
-  "extends": "standard",
+  "extends": ["standard", "prettier", "prettier/standard"],
+  "plugins": ["standard", "prettier"],
   "parserOptions": {
     "ecmaVersion": 6,
     "sourceType": "module"

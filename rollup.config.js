@@ -1,5 +1,5 @@
-import buble from 'rollup-plugin-buble'
-import { uglify } from 'rollup-plugin-uglify'
+import buble from 'rollup-plugin-buble';
+import { uglify } from 'rollup-plugin-uglify';
 
 export default [
   {
@@ -19,4 +19,4 @@ export default [
     },
     plugins: [buble(), uglify()]
   }
-]
+];
