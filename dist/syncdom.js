@@ -50,8 +50,7 @@ var LISTENERS = [
   'onpageshow',
   'onpagehide',
   'onvisibilitychange',
-  'oninvalid'
-];
+  'oninvalid' ];
 
 var isArray = Array.isArray;
 var getOwnPropertyNames = Object.getOwnPropertyNames;
@@ -203,7 +202,7 @@ var syncListeners = function (oldNode, node) {
     if (f) {
       f !== oldNode[k] && (oldNode[k] = f);
     } else {
-      oldNode[k] && (oldNode[k] = void 0);
+      oldNode[k] && (oldNode[k] = undefined);
     }
   });
 };
@@ -275,8 +274,10 @@ var removeChild = function (parent, node) {
 var containsValue = function (obj, value) { return obj != null && getOwnPropertyNames(obj).some(function (k) { return obj[k] === value; }); };
 
 var walkChildren = function (node, callback) {
-  for (var c = node.firstChild; c; c = c.nextSibling) {
+  for (var c = node.firstChild; c; ) {
+    var n = c.nextSibling;
     callback(c);
+    c = n;
   }
 };
 

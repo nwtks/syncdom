@@ -48,7 +48,7 @@ const LISTENERS = [
   'onpageshow',
   'onpagehide',
   'onvisibilitychange',
-  'oninvalid'
+  'oninvalid',
 ];
 
 const { isArray } = Array;
@@ -200,7 +200,7 @@ const syncListeners = (oldNode, node) => {
     if (f) {
       f !== oldNode[k] && (oldNode[k] = f);
     } else {
-      oldNode[k] && (oldNode[k] = void 0);
+      oldNode[k] && (oldNode[k] = undefined);
     }
   });
 };
@@ -274,8 +274,10 @@ const containsValue = (obj, value) =>
   obj != null && getOwnPropertyNames(obj).some((k) => obj[k] === value);
 
 const walkChildren = (node, callback) => {
-  for (let c = node.firstChild; c; c = c.nextSibling) {
+  for (let c = node.firstChild; c; ) {
+    const n = c.nextSibling;
     callback(c);
+    c = n;
   }
 };
 
